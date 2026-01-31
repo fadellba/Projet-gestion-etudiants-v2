@@ -1,8 +1,4 @@
 <?php
-
-use Doctrine\ORM\EntityManager;
-use models\Etudiant;
-
 class EtudiantController
 {
     private $etudiant;
@@ -14,43 +10,104 @@ class EtudiantController
 
     public function index()
     {
-        $students = $this->etudiant->getAllStudent();
-        require_once("./../views/etudiant/index.php");
+        $students = $this->etudiant->getAll();
+        require_once("./../app/views/etudiants/index.php");
     }
 
     public function loadAddForm()
     {
-        require_once "./../views/etudiant/create.php";
+        require_once "./../app/views/etudiants/create.php";
     }
 
-    public function createStudentAction($nom, $prenom, $email, $telephone, $dateNaissance, $filiere, $niveau, $statut)
+    function createStudentAction($data)
     {
-        $dateNaissance = new DateTime($dateNaissance);
-        $this->etudiant->addStudent($nom, $prenom, $email, $telephone, $dateNaissance, $filiere, $niveau, $statut);
-        header("Location: index.php");
+        $nom = htmlspecialchars(trim($data['nom'] ?? ''));
+        $prenom = htmlspecialchars(trim($data['prenom'] ?? ''));
+        $email = filter_var(trim($data['email'] ?? ''), FILTER_SANITIZE_EMAIL);
+        $telephone = htmlspecialchars(trim($data['telephone'] ?? ''));
+        $date_naissance = htmlspecialchars(trim($data['date_naissance'] ?? ''));
+        $filiere = htmlspecialchars(trim($data['filiere'] ?? ''));
+        $niveau = htmlspecialchars(trim($data['niveau'] ?? ''));
+        $statut = htmlspecialchars(trim($data['statut'] ?? ''));
+
+        if (!empty($date_naissance)) {
+            $dateEntrer = new DateTime($date_naissance);
+            $dateInscription = new DateTime('today');
+
+            if ($dateEntrer >= $dateInscription) {
+                header("Location: index.php?message=Erreur : La date de naissance doit etre anterieure a la date d'inscription");
+                return;
+            }
+        }
+
+        $result = $this->etudiant->add($nom, $prenom, $email, $telephone, $date_naissance, $filiere, $niveau, $statut);
+        $message = $result ? "Ajout avec succes" : "Ajout avec echec";
+        header("Location: index.php?message=$message");
     }
 
     public function loadEditForm($id)
     {
-        $student = $this->etudiant->getStudentById($id);
-        require_once "./../views/etudiant/edit.php";
+        $id = (int)$id;
+        if ($id > 0) {
+            $student = $this->etudiant->getById($id);
+            require_once "./../app/views/etudiants/edit.php";
+        } else {
+            header("Location: index.php?message=Etudiant introuvable !");
+        }
+        
     }
 
-    public function editStudentAction($id, $nom, $prenom, $email, $telephone, $dateNaissance, $filiere, $niveau, $statut) 
+    function editeStudentAction($data)
     {
-        $dateNaissance = new DateTime($dateNaissance);
-        $this->etudiant->updateStudent($id, $nom, $prenom, $email, $telephone, $dateNaissance, $filiere, $niveau, $statut);
-        header("Location: index.php");
+        $id = (int)($data['id'] ?? 0);
+        $nom = htmlspecialchars(trim($data['nom'] ?? ''));
+        $prenom = htmlspecialchars(trim($data['prenom'] ?? ''));
+        $email = filter_var(trim($data['email'] ?? ''), FILTER_SANITIZE_EMAIL);
+        $telephone = htmlspecialchars(trim($data['telephone'] ?? ''));
+        $filiere = htmlspecialchars(trim($data['filiere'] ?? ''));
+        $niveau = htmlspecialchars(trim($data['niveau'] ?? ''));
+        $statut = htmlspecialchars(trim($data['statut'] ?? ''));
+        $date_naissance = htmlspecialchars(trim($data['date_naissance'] ?? ''));
+
+        if (!empty($date_naissance)) {
+            $dateEntrer = new DateTime($date_naissance);
+            $dateInscription = new DateTime('today');
+
+            if ($dateEntrer >= $dateInscription) {
+                header("Location: index.php?message=Erreur : La date de naissance doit etre anterieure a la date d'inscription");
+                return;
+            }
+        }
+
+        $result = $this->etudiant->update($id, $nom, $prenom, $email, $telephone, $date_naissance, $filiere, $niveau, $statut);
+        $message = $result ? "Mis a jour avec succes" : "echec de la mis a jour";
+        header("Location: index.php?message=$message");
     }
 
-    public function deleteStudentAction($id)
+    function deleteStudentAction($id)
     {
-        $this->etudiant->deleteStudent($id);
-        header("Location: index.php");
+        $id = (int)$id;
+        if ($id > 0) {
+            $result = $this->etudiant->delete($id);
+            $message = $result ? "Suppression avec succes" : "echec de la suppression";
+        }
+        header("Location: index.php?message=$message");
+    }
+
+    function getStudentByIdAction($id)
+    {
+        $id = (int)$id;
+        if ($id > 0) {
+            $student = $this->etudiant->getById($id);
+            require_once "./../app/views/etudiants/show.php";
+        } else {
+            header("Location: index.php?message=Etudiant introuvable !");
+        }
     }
 
     public function searchByName($nom)
     {
-        $result = $this->etudiant->getStudentByName($nom);
+        $nom = htmlspecialchars(trim($nom ?? ''));
+        $result = $this->etudiant->searchByName($nom);
     }
 }

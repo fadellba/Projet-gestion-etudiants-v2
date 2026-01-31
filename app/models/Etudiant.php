@@ -8,10 +8,10 @@ class Etudiant
         $this->database = $database;
     }
 
-    public function create($nom, $prenom, $email, $tel, $dnais, $filiere, $niv, $dinsc, $statut)
+    public function add($nom, $prenom, $email, $tel, $dnais, $filiere, $niv, $statut)
     {
-        $sql = "INSERT INTO etudiants (nom, prenom, email, telephone, date_naissance, filiere, niveau, date_inscription, statut) 
-                VALUES (:nom, :prenom, :email, :tel, :dnais, :filiere, :niv, :dinsc, :statut)";
+        $sql = "INSERT INTO etudiants (nom, prenom, email, telephone, date_naissance, filiere, niveau, statut) 
+                VALUES (:nom, :prenom, :email, :tel, :dnais, :filiere, :niv, :statut)";
 
         $stmt = $this->database->prepare($sql);
         return $stmt->execute([
@@ -22,7 +22,6 @@ class Etudiant
             ':dnais'  => $dnais,
             ':filiere' => $filiere,
             ':niv'    => $niv,
-            ':dinsc'  => $dinsc,
             ':statut' => $statut
         ]);
     }
